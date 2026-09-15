@@ -1,0 +1,519 @@
+/* ============================================================
+   VANTA — стили интерфейса
+   Тёмная тема, минимализм, акцент на фиолетово-циановый градиент
+============================================================ */
+
+/* ---------- Переменные ---------- */
+:root {
+  --bg-dark: #05060a;
+  --bg-panel: #10121c;
+  --bg-panel-2: #171a28;
+  --border: #23273a;
+  --border-hover: #3a4055;
+
+  --text: #e8eaf0;
+  --text-dim: #8a8fa5;
+  --text-mute: #5a5f75;
+
+  --accent: #7c5cff;
+  --accent-2: #00d9ff;
+  --accent-grad: linear-gradient(135deg, #7c5cff, #00d9ff);
+
+  --danger: #ff4d6d;
+  --success: #3ee68a;
+  --warn: #ffb84d;
+
+  --hp: linear-gradient(90deg, #ff4d6d, #ff8a9a);
+  --hp-low: linear-gradient(90deg, #ff2020, #ff4d6d);
+
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+}
+
+/* ---------- Сброс ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-dark);
+  color: var(--text);
+  font-family: var(--font);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---------- Канвас ---------- */
+#game-container {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+#game-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ---------- Утилиты ---------- */
+.hidden {
+  display: none !important;
+}
+
+/* ============================================================
+   HUD
+============================================================ */
+#hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+  font-size: 14px;
+}
+
+.hud-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.hud-sub {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* --- Левый верх: здоровье --- */
+.hud-topleft {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+}
+
+.bar {
+  width: 240px;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+.bar-fill {
+  height: 100%;
+  width: 100%;
+  transition: width 0.25s ease-out, background 0.3s;
+  border-radius: 8px;
+}
+
+.bar-fill.hp {
+  background: var(--hp);
+}
+
+.bar-fill.hp.low {
+  background: var(--hp-low);
+  animation: pulse 0.9s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+/* --- Правый верх: счёт, оружие, патроны --- */
+.hud-topright {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  text-align: right;
+}
+
+.hud-score {
+  font-size: 32px;
+  font-weight: 700;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1;
+}
+
+.hud-weapon {
+  margin-top: 14px;
+}
+
+.hud-ammo {
+  font-size: 30px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  color: var(--text);
+}
+
+.hud-ammo.empty {
+  color: var(--danger);
+}
+
+.hud-reload {
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  animation: pulse 0.8s infinite;
+}
+
+/* --- Прицел --- */
+.crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  transform: translate(-50%, -50%);
+}
+
+.crosshair::before,
+.crosshair::after {
+  content: '';
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.9);
+}
+
+.crosshair::before {
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.crosshair::after {
+  top: 50%;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
+/* --- Центральные сообщения --- */
+.center-msg {
+  position: absolute;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 26px;
+  font-weight: 700;
+  text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
+  opacity: 0;
+  transition: opacity 0.25s;
+  pointer-events: none;
+  letter-spacing: 1px;
+}
+
+.center-msg.show { opacity: 1; }
+.center-msg.hit  { color: var(--warn); }
+.center-msg.kill { color: var(--success); }
+.center-msg.dmg  { color: var(--danger); }
+
+/* --- Низ слева: управление --- */
+.hud-controls {
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-mute);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.hud-controls b {
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+/* --- Низ справа: волны --- */
+.hud-waves {
+  position: absolute;
+  bottom: 22px;
+  right: 22px;
+  text-align: right;
+}
+
+.hud-wave-num {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ============================================================
+   ОВЕРЛЕИ
+============================================================ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(124, 92, 255, 0.10), transparent 60%),
+    radial-gradient(circle at 80% 80%, rgba(0, 217, 255, 0.08), transparent 55%),
+    rgba(5, 6, 10, 0.96);
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  overflow-y: auto;
+}
+
+.overlay-title {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--text);
+  text-transform: uppercase;
+}
+
+.overlay-title.death {
+  color: var(--danger);
+  text-shadow: 0 0 30px rgba(255, 77, 109, 0.6);
+}
+
+/* --- Заголовок игры --- */
+.game-title {
+  font-size: 72px;
+  font-weight: 900;
+  letter-spacing: 14px;
+  background: var(--accent-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-align: center;
+  text-shadow: 0 0 60px rgba(124, 92, 255, 0.35);
+  animation: title-glow 4s ease-in-out infinite;
+}
+
+@keyframes title-glow {
+  0%, 100% { filter: drop-shadow(0 0 20px rgba(124, 92, 255, 0.4)); }
+  50%      { filter: drop-shadow(0 0 35px rgba(0, 217, 255, 0.55)); }
+}
+
+.game-subtitle {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-top: -10px;
+}
+
+/* --- Секции меню --- */
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.menu-label {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* --- Опции выбора --- */
+.option {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 190px;
+  padding: 14px 18px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.option:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-panel-2);
+  transform: translateY(-2px);
+}
+
+.option.active {
+  border-color: var(--accent);
+  background: rgba(124, 92, 255, 0.08);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 24px rgba(124, 92, 255, 0.25);
+}
+
+.option-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.option-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.35;
+}
+
+/* --- Кнопки --- */
+.btn-primary,
+.btn-secondary {
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 16px 52px;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto;
+}
+
+.btn-primary {
+  background: var(--accent-grad);
+  color: #fff;
+  box-shadow: 0 6px 24px rgba(124, 92, 255, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(124, 92, 255, 0.6);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-dim);
+  border: 2px solid var(--border);
+  padding: 12px 40px;
+  font-size: 14px;
+}
+
+.btn-secondary:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  background: var(--bg-panel);
+}
+
+/* --- Подсказка под кнопкой --- */
+.menu-hint {
+  font-size: 12px;
+  color: var(--text-mute);
+  margin-top: -8px;
+}
+
+/* ============================================================
+   ЭКРАН СМЕРТИ
+============================================================ */
+.stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 16px;
+  color: var(--text-dim);
+  padding: 20px 40px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  min-width: 260px;
+  text-align: center;
+}
+
+.stats span {
+  color: var(--text);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* ============================================================
+   ЗАГРУЗКА
+============================================================ */
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   АДАПТИВ
+============================================================ */
+@media (max-width: 900px) {
+  .game-title { font-size: 48px; letter-spacing: 8px; }
+
+  .option { min-width: 150px; padding: 12px 14px; }
+  .option-desc { display: none; }
+
+  .hud-controls { display: none; }
+
+  .bar { width: 160px; }
+  .hud-score, .hud-wave-num { font-size: 24px; }
+  .hud-ammo { font-size: 24px; }
+}
+
+@media (max-width: 600px) {
+  .game-title { font-size: 34px; letter-spacing: 5px; }
+  .overlay-title { font-size: 28px; letter-spacing: 4px; }
+
+  .row { flex-direction: column; align-items: stretch; }
+  .option { min-width: auto; width: 100%; }
+
+  .btn-primary, .btn-secondary {
+    width: 100%;
+    padding: 14px 20px;
+  }
+
+  .hud-topleft, .hud-topright { top: 12px; }
+  .hud-topleft { left: 12px; }
+  .hud-topright { right: 12px; }
+
+  .hud-waves { bottom: 12px; right: 12px; }
+  .bar { width: 120px; height: 12px; }
+  }
