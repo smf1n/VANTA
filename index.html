@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="TPS Arena — 3D-шутер от третьего лица на Three.js">
+  <title>TPS Arena</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <!-- ============================================================
+       ИГРОВОЙ КАНВАС (создаётся в scene.js, но контейнер здесь)
+  ============================================================ -->
+  <div id="game-container"></div>
+
+  <!-- ============================================================
+       HUD (интерфейс во время боя)
+  ============================================================ -->
+  <div id="hud" class="hidden">
+
+    <!-- Левый верх: здоровье -->
+    <div class="hud-topleft">
+      <div class="hud-label">ЗДОРОВЬЕ</div>
+      <div class="bar">
+        <div id="hp-fill" class="bar-fill hp"></div>
+      </div>
+      <div id="hp-text" class="hud-sub">100 / 100</div>
+    </div>
+
+    <!-- Правый верх: счёт, оружие, патроны -->
+    <div class="hud-topright">
+      <div id="score" class="hud-score">0</div>
+      <div id="kills" class="hud-sub">убийств: 0</div>
+      <div class="hud-weapon">
+        <div id="weapon-name" class="hud-sub">Пистолет</div>
+        <div id="ammo" class="hud-ammo">12</div>
+        <div id="reload-hint" class="hud-reload hidden">Перезарядка...</div>
+      </div>
+    </div>
+
+    <!-- Центр: прицел -->
+    <div id="crosshair" class="crosshair"></div>
+
+    <!-- Центр: всплывающие сообщения (попадание, смерть врага) -->
+    <div id="center-msg" class="center-msg"></div>
+
+    <!-- Низ слева: подсказки управления -->
+    <div class="hud-controls">
+      <b>WASD</b> — движение · <b>Мышь</b> — камера · <b>ЛКМ</b> — стрелять<br>
+      <b>Shift</b> — бег · <b>1 2 3 4</b> — оружие · <b>R</b> — перезарядка · <b>Esc</b> — пауза
+    </div>
+
+    <!-- Низ справа: полоса волн противников -->
+    <div class="hud-waves">
+      <div class="hud-label">ВОЛНА</div>
+      <div id="wave-number" class="hud-wave-num">1</div>
+      <div id="enemies-left" class="hud-sub">врагов: 0</div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       ГЛАВНОЕ МЕНЮ
+  ============================================================ -->
+  <div id="main-menu" class="overlay">
+
+    <h1 class="game-title">TPS ARENA</h1>
+    <p class="game-subtitle">Шутер от третьего лица · Three.js</p>
+
+    <!-- Выбор сложности -->
+    <div class="menu-section">
+      <div class="menu-label">Сложность</div>
+      <div class="row" id="difficulty-row">
+        <div class="option" data-value="easy">
+          <span class="option-title">Лёгкая</span>
+          <span class="option-desc">Медленные, не меткие, мало стреляют</span>
+        </div>
+        <div class="option active" data-value="normal">
+          <span class="option-title">Средняя</span>
+          <span class="option-desc">Прицеливаются, держат дистанцию</span>
+        </div>
+        <div class="option" data-value="hard">
+          <span class="option-title">Сложная</span>
+          <span class="option-desc">Умные, прячутся, стреляют точно</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Выбор карты -->
+    <div class="menu-section">
+      <div class="menu-label">Карта</div>
+      <div class="row" id="map-row">
+        <div class="option" data-value="arena">
+          <span class="option-title">Арена</span>
+          <span class="option-desc">Открытая · для снайперки и автомата</span>
+        </div>
+        <div class="option active" data-value="city">
+          <span class="option-title">Город</span>
+          <span class="option-desc">Средняя · универсальная</span>
+        </div>
+        <div class="option" data-value="bunker">
+          <span class="option-title">Бункер</span>
+          <span class="option-desc">Тесная · для дробовика и пистолета</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Выбор персонажа -->
+    <div class="menu-section">
+      <div class="menu-label">Персонаж</div>
+      <div class="row" id="char-row">
+        <div class="option active" data-value="scout">
+          <span class="option-title">Разведчик</span>
+          <span class="option-desc">Быстрый, но хрупкий</span>
+        </div>
+        <div class="option" data-value="soldier">
+          <span class="option-title">Солдат</span>
+          <span class="option-desc">Баланс скорости и здоровья</span>
+        </div>
+        <div class="option" data-value="heavy">
+          <span class="option-title">Тяжёлый</span>
+          <span class="option-desc">Медленный, много здоровья</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Кнопка старта -->
+    <button id="start-btn" class="btn-primary">НАЧАТЬ ИГРУ</button>
+    <div class="menu-hint">Клик по кнопке захватит курсор мыши</div>
+
+  </div>
+
+  <!-- ============================================================
+       ЭКРАН ПАУЗЫ
+  ============================================================ -->
+  <div id="pause-menu" class="overlay hidden">
+    <h2 class="overlay-title">ПАУЗА</h2>
+    <button id="resume-btn" class="btn-primary">ПРОДОЛЖИТЬ</button>
+    <button id="restart-btn" class="btn-secondary">НАЧАТЬ ЗАНОВО</button>
+    <button id="menu-btn" class="btn-secondary">В ГЛАВНОЕ МЕНЮ</button>
+  </div>
+
+  <!-- ============================================================
+       ЭКРАН СМЕРТИ
+  ============================================================ -->
+  <div id="death-screen" class="overlay hidden">
+    <h2 class="overlay-title death">ВЫ ПОГИБЛИ</h2>
+    <div class="stats">
+      <div>Убийств: <span id="death-kills">0</span></div>
+      <div>Волна: <span id="death-wave">1</span></div>
+      <div>Очки: <span id="death-score">0</span></div>
+    </div>
+    <button id="retry-btn" class="btn-primary">ПОПРОБОВАТЬ СНОВА</button>
+    <button id="death-menu-btn" class="btn-secondary">В ГЛАВНОЕ МЕНЮ</button>
+  </div>
+
+  <!-- ============================================================
+       ЭКРАН ЗАГРУЗКИ
+  ============================================================ -->
+  <div id="loading-screen" class="overlay hidden">
+    <div class="loader"></div>
+    <div class="loading-text">Загрузка...</div>
+  </div>
+
+  <!-- ============================================================
+       ПОДКЛЮЧЕНИЕ МОДУЛЕЙ
+       (type="module" — работает только через http:// или https://)
+  ============================================================ -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module" src="./js/main.js"></script>
+
+</body>
+</html>
